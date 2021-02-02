@@ -51,7 +51,7 @@ function Home() {
     };
 
     const getData = async () => {
-        const formattedDate = selectedDate.getFullYear() + "-" + (selectedDate.getMonth() + 1) + "-" + selectedDate.getDate();
+        const formattedDate = selectedDate.getFullYear() + "-" + pad_with_zeroes(selectedDate.getMonth() + 1) + "-" + pad_with_zeroes(selectedDate.getDate());
         setLoading(true);
         var config = {
             method: 'get',
@@ -84,8 +84,21 @@ function Home() {
         setSelectedDate(date);
     };
 
+    //TODO: add zero when it's number is 1 length
+    const pad_with_zeroes = (number) => {
+
+        var my_string = '' + number;
+        while (my_string.length < 2) {
+            my_string = '0' + my_string;
+        }
+
+        return my_string;
+
+    }
+
     function handleClick(index) {
-        router.push(`/detail/${index}`)
+        const id = data[index].link;
+        router.push(`/detail/${id}`)
     }
 
     useEffect(() => {
@@ -120,7 +133,7 @@ function Home() {
                 </div> : null
             }
             <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                <Grid>
+                <Grid container justify='space-around' style={{padding: '20px'}}>
                     <KeyboardDatePicker
                         disableToolbar
                         variant="inline"
