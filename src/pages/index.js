@@ -94,7 +94,7 @@ function Home() {
 
         return my_string;
 
-    }
+    };
 
     function handleClick(index) {
         const id = data[index].link;

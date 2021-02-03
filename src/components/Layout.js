@@ -16,15 +16,6 @@ function Layout(props) {
             <main className={styles.main}>
                 {props.children}
             </main>
-            <footer className={styles.footer}>
-                <a
-                    href="#"
-                    rel="noopener noreferrer"
-                >
-                    Powered by{' '}
-                    <img src="/vercel.svg" alt="Vercel Logo" className={styles.footerLogo} />
-                </a>
-            </footer>
         </>
     )
 }
