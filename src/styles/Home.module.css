@@ -13,7 +13,8 @@
   justify-content: center;
   display: flex;
   align-items: center;
-  background-color: #7CE7AC;
+  /*background-color: #7CE7AC;*/
+  background-color: #000000;
 }
 .main {
   height: calc(100vh - 100px);

@@ -11,27 +11,28 @@ import {
     TableHead,
     TablePagination,
     TableRow,
-    Grid
-
+    Grid,
+    TextField
 } from "@material-ui/core";
 
 
 import styles from "../../../styles/Home.module.css";
 import Loader from "react-loader-spinner";
-// import {Calendar} from "react-multi-date-picker"
 import dynamic from "next/dynamic";
+import moment from "moment";
 const ReactApexChart = dynamic(
     () => {
         return import("react-apexcharts")
     },
-    { ssr: false }
+    {ssr: false}
 );
 const Calendar = dynamic(
     () => {
         return import("react-multi-date-picker").then((mod) => mod.Calendar)
     },
-    { ssr: false }
+    {ssr: false}
 );
+
 function DetailPage() {
 
     const {id} = useRouter().query;
@@ -40,6 +41,7 @@ function DetailPage() {
     const [data, setData] = useState([]);
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [page, setPage] = useState(0);
+    const [chartTitle, setChartTitle] = useState('');
     const [categories, setCategories] = useState([]);
     const [value, setValue] = useState([new Date()]);
 
@@ -63,6 +65,17 @@ function DetailPage() {
         setPage(0);
     }
 
+
+    //TODO: compare date
+    function compare(a, b) {
+        if (a > b) return -1;
+        if (b > a) return 1;
+
+        return 0;
+    }
+
+    let sortedArray = value.sort(compare);
+
     function handleChangePage(event, newPage) {
         setPage(newPage);
     }
@@ -70,7 +83,49 @@ function DetailPage() {
     const options = {
         chart: {
             type: 'bar',
-            height: 430
+            height: 430,
+            grid: {
+                show: true,
+                borderColor: 'black',
+                strokeDashArray: 0,
+                position: 'back',
+                xaxis: {
+                    lines: {
+                        show: false
+                    }
+                },
+                yaxis: {
+                    lines: {
+                        show: false
+                    }
+                },
+                row: {
+                    colors: undefined,
+                    opacity: 0.5
+                },
+                column: {
+                    colors: undefined,
+                    opacity: 0.5
+                },
+                padding: {
+                    top: 0,
+                    right: 0,
+                    bottom: 0,
+                    left: 0
+                },
+            }
+        },
+        title: {
+            text: chartTitle,
+            align: 'right',
+            margin: 30,
+            offsetY: 393,
+            floating: true,
+            style: {
+                fontSize:  '16px',
+                fontWeight:  'bold',
+                color:  '#000',
+            },
         },
         plotOptions: {
             bar: {
@@ -90,12 +145,16 @@ function DetailPage() {
         },
         stroke: {
             show: true,
-            width: 1,
+            width: 2,
             colors: ['#fff']
         },
         xaxis: {
             categories: categories,
+            labels: {
+                show: false
+            }
         },
+        colors: ['#0000ff', '#ff0000', '#00ff00']
     };
 
     //TODO: get graph data using momentjs
@@ -125,9 +184,11 @@ function DetailPage() {
                 name: 'Comments'
             }
         ];
-        for (let i = 0; i < value.length; i++) {
-            let formattedDate = value[i].year + '-' + pad_with_zeroes(value[i].month.number) + '-' + pad_with_zeroes(value[i].day);
-            months.push(formattedDate);
+        for (let i = 0; i < sortedArray.length; i++) {
+            console.log(sortedArray[i].month);
+            let formattedDate = sortedArray[i].year + '-' + pad_with_zeroes(sortedArray[i].month.number) + '-' + pad_with_zeroes(sortedArray[i].day);
+            let formarttedmonth = moment(formattedDate).format('DD-MMM-YYYY')
+            months.push(formarttedmonth);
             let index = data.findIndex(x => x.date == formattedDate);
             let machedItem = data[index];
             if (machedItem) {
@@ -171,8 +232,9 @@ function DetailPage() {
             const res = await axios(config);
             setData(res.data.data);
             setLoading(false);
-            let initialCategory =[];
-            initialCategory.push(res.data.data[0].date) ;
+            let initialCategory = [];
+            initialCategory.push(moment(res.data.data[0].date).format('DD-MMM-YYYY'));
+
             setCategories(initialCategory);
             setSeries(
                 [
@@ -209,6 +271,10 @@ function DetailPage() {
         setValue(e);
     }
 
+    function handleChangeTitle(e) {
+        setChartTitle(e.target.value)
+    }
+
     return (
         <div>
             {
@@ -224,24 +290,26 @@ function DetailPage() {
             }
 
 
-
-                <Grid container spacing={1} alignItems='center' justify='center'>
-                    <Grid item xs={12} md={3}>
-                        <Calendar
-                            value={value}
-                            onChange={handleChangeCalendar}
-                            multiple
-                            maxDate={new Date()}
-                        />
-                    </Grid>
-                    <Grid item xs={12} md={9}>
-                        <Paper style={{padding: '2rem'}}>
-                            <div id="chart">
-                                <ReactApexChart options={options} series={series} type="bar" height={430}/>
-                            </div>
-                        </Paper>
-                    </Grid>
+            <Grid container spacing={1} alignItems='center' justify='center'>
+                <Grid item xs={12} md={3}>
+                    <Calendar
+                        value={value}
+                        onChange={handleChangeCalendar}
+                        multiple
+                        maxDate={new Date()}
+                    />
                 </Grid>
+                <Grid item xs={12} md={9}>
+                    <Paper style={{padding: '2rem'}}>
+                        <div>
+                            <TextField id="outlined-basic" label="Package Name" variant="outlined" value={chartTitle} onChange={handleChangeTitle}/>
+                        </div>
+                        <div id="chart">
+                            <ReactApexChart options={options} series={series} type="bar" height={430}/>
+                        </div>
+                    </Paper>
+                </Grid>
+            </Grid>
             {/*<TableContainer component={Paper}>*/}
             {/*    <Table aria-label="simple table">*/}
             {/*        <TableHead>*/}
