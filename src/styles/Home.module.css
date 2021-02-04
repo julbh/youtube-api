@@ -123,6 +123,15 @@
 .logo {
   height: 60px;
 }
+
+.logoBlack {
+  height: 30px;
+}
+
+.logoArea {
+  padding: 20px 20px 0 20px;
+}
+
 .footerLogo {
   height: 1rem;
 }

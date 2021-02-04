@@ -1,5 +1,5 @@
 import {useRouter} from "next/router";
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import axios from "axios";
 import getConfig from "next/config";
 import {
@@ -12,14 +12,18 @@ import {
     TablePagination,
     TableRow,
     Grid,
-    TextField
+    TextField, makeStyles, Button, Icon
 } from "@material-ui/core";
-
+import GetAppIcon from '@material-ui/icons/GetApp';
 
 import styles from "../../../styles/Home.module.css";
 import Loader from "react-loader-spinner";
 import dynamic from "next/dynamic";
 import moment from "moment";
+import * as htmlToImage from 'html-to-image';
+import { toPng, toJpeg, toBlob, toPixelData, toSvg } from 'html-to-image';
+import { saveAs } from 'file-saver';
+
 const ReactApexChart = dynamic(
     () => {
         return import("react-apexcharts")
@@ -33,8 +37,17 @@ const Calendar = dynamic(
     {ssr: false}
 );
 
-function DetailPage() {
+const useStyles = makeStyles((theme) => ({
+    button: {
+        margin: theme.spacing(1),
+    },
+}));
 
+function DetailPage() {
+    const classes = useStyles();
+
+    //ref for chart
+    const chartRef = useRef(null);
     const {id} = useRouter().query;
     const [loading, setLoading] = useState(false);
     const {API_ENDPOINT} = getConfig().publicRuntimeConfig;
@@ -64,7 +77,13 @@ function DetailPage() {
         setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0);
     }
-
+    const exportToPng = () => {
+        var node = chartRef.current;
+        htmlToImage.toBlob(node)
+            .then(function (blob) {
+                window.saveAs(blob, 'result.png');
+            });
+    };
 
     //TODO: compare date
     function compare(a, b) {
@@ -84,35 +103,8 @@ function DetailPage() {
         chart: {
             type: 'bar',
             height: 430,
-            grid: {
-                show: true,
-                borderColor: 'black',
-                strokeDashArray: 0,
-                position: 'back',
-                xaxis: {
-                    lines: {
-                        show: false
-                    }
-                },
-                yaxis: {
-                    lines: {
-                        show: false
-                    }
-                },
-                row: {
-                    colors: undefined,
-                    opacity: 0.5
-                },
-                column: {
-                    colors: undefined,
-                    opacity: 0.5
-                },
-                padding: {
-                    top: 0,
-                    right: 0,
-                    bottom: 0,
-                    left: 0
-                },
+            toolbar: {
+                show: false
             }
         },
         title: {
@@ -187,7 +179,7 @@ function DetailPage() {
         for (let i = 0; i < sortedArray.length; i++) {
             console.log(sortedArray[i].month);
             let formattedDate = sortedArray[i].year + '-' + pad_with_zeroes(sortedArray[i].month.number) + '-' + pad_with_zeroes(sortedArray[i].day);
-            let formarttedmonth = moment(formattedDate).format('DD-MMM-YYYY')
+            let formarttedmonth = moment(formattedDate).format('DD-MMM-YYYY');
             months.push(formarttedmonth);
             let index = data.findIndex(x => x.date == formattedDate);
             let machedItem = data[index];
@@ -301,11 +293,30 @@ function DetailPage() {
                 </Grid>
                 <Grid item xs={12} md={9}>
                     <Paper style={{padding: '2rem'}}>
-                        <div>
-                            <TextField id="outlined-basic" label="Package Name" variant="outlined" value={chartTitle} onChange={handleChangeTitle}/>
-                        </div>
-                        <div id="chart">
-                            <ReactApexChart options={options} series={series} type="bar" height={430}/>
+                        <Grid container justify='space-between'>
+                            <Grid item>
+                                <TextField label="Package Name" variant="outlined" value={chartTitle} onChange={handleChangeTitle}/>
+                            </Grid>
+                            <Grid item>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    className={classes.button}
+                                    endIcon={<GetAppIcon />}
+                                    onClick={exportToPng}
+                                >
+                                    Export PNG
+                                </Button>
+                            </Grid>
+                        </Grid>
+                        <div id="chart" ref={chartRef} >
+                            <div style={{border: '1px solid lightgray', marginTop: '20px'}}>
+                                <div className={styles.logoArea}>
+                                    <img  src="/assets/images/logo_black.png" className={styles.logoBlack}></img>
+                                </div>
+                                <ReactApexChart options={options} series={series} type="bar" height={430}/>
+                            </div>
+                            <div style={{height: '10px'}}>&nbsp;</div>
                         </div>
                     </Paper>
                 </Grid>
